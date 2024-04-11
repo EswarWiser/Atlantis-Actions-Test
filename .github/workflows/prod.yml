@@ -1,27 +1,27 @@
 name: Update SGs and Run Atlantis Plan
- 
+
 on:
   pull_request:
     branches:
       - main
     types: [opened, synchronize]
- 
+
 jobs:
   run_atlantis_plan:
     runs-on: ubuntu-latest
     env:
-        AWS_ROLE_ARN: ${{secrets.AWS_ROLE_ARN}}
-        SECURITY_GROUP_1: ${{secrets.SECURITY_GROUP_1}}
-        SECURITY_GROUP_2: ${{secrets.SECURITY_GROUP_2}}
+      AWS_ROLE_ARN: ${{secrets.AWS_ROLE_ARN}}
+      SECURITY_GROUP_1: ${{secrets.SECURITY_GROUP_1}}
+      SECURITY_GROUP_2: ${{secrets.SECURITY_GROUP_2}}
     permissions:
-        id-token: write
-        contents: read
- 
+      id-token: write
+      contents: read
+
     steps:
     - name: Get Github action IP
       id: ip
       uses: haythem/public-ip@v1.3
- 
+
     - name: Assume IAM Role
       id: assume_role
       uses: aws-actions/configure-aws-credentials@v4
