@@ -1,0 +1,7 @@
+version: 3
+projects:
+  - name: atlantis
+    dir: ./atlantis
+    
+  - name: sns
+    dir: ./sns
