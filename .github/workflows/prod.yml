@@ -45,7 +45,22 @@ jobs:
             echo "$ip/32" >> added_cidr_sg2.txt
         done 
 
+    - name: Wait for "atlantis plan" status check to finish
+      id: wait_for_atlantis_plan
+      if: contains(github.event.pull_request.body, 'atlantis plan') || steps.check_atlantis_plan.outputs.atlantis_plan_exists == 'true'
+      run: |
+        until [[ $(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+          "https://api.github.com/repos/${GITHUB_REPOSITORY}/commits/${{ github.event.pull_request.head.sha }}/status" \
+          | jq -r '.statuses[] | select(.context == "atlantis plan") | .state') == "success" || \
+          $(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+          "https://api.github.com/repos/${GITHUB_REPOSITORY}/commits/${{ github.event.pull_request.head.sha }}/status" \
+          | jq -r '.statuses[] | select(.context == "atlantis plan") | .state') == "failure" ]]; do
+            echo "Waiting for Atlantis plan status check to finish..."
+            sleep 10
+        done
+
     - name: Revoke Port 80 Rules from Security Group 1
+      if: always()
       run: |
         cat added_cidr_sg1.txt | while read cidr_ip; do
           if [ ! -z "$cidr_ip" ]; then
