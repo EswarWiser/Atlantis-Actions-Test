@@ -1,11 +1,11 @@
 name: Update SGs and Run Atlantis Plan
-
+ 
 on:
   pull_request:
     branches:
       - main
     types: [opened, synchronize]
-
+ 
 jobs:
   run_atlantis_plan:
     runs-on: ubuntu-latest
@@ -16,66 +16,47 @@ jobs:
     permissions:
         id-token: write
         contents: read
-
+ 
     steps:
     - name: Get Github action IP
       id: ip
       uses: haythem/public-ip@v1.3
-
+ 
     - name: Assume IAM Role
       id: assume_role
       uses: aws-actions/configure-aws-credentials@v4
       with:
         role-to-assume: ${{ env.AWS_ROLE_ARN }}
         aws-region: us-east-1
-        
+       
     - name: Add Github Actions IP to Security group-1
+      id: add_sg1
       run: |
         for ip in ${{ steps.ip.outputs.ipv4 }}; do
             aws ec2 authorize-security-group-ingress --group-id $SECURITY_GROUP_1 --protocol tcp --port 80 --cidr $ip/32
+            echo "$ip/32" >> added_cidr_sg1.txt
         done
-
+ 
     - name: Add Github Actions IP to Security group-2
+      id: add_sg2
       run: |
         for ip in ${{ steps.ip.outputs.ipv4 }}; do
             aws ec2 authorize-security-group-ingress --group-id $SECURITY_GROUP_2 --protocol tcp --port 443 --cidr $ip/32
-        done  
-        
-        
+            echo "$ip/32" >> added_cidr_sg2.txt
+        done 
+
     - name: Revoke Port 80 Rules from Security Group 1
       run: |
-        rules=$(aws ec2 describe-security-groups --group-ids $SECURITY_GROUP_1 --query 'SecurityGroups[0].IpPermissions[?IpProtocol==`tcp` && FromPort==`80`].[IpRanges[].CidrIp]' --output json)
-        echo "$rules"
-      
-        cidr_ips=()
-        while IFS= read -r line; do
-          cidr_ips+=("$line")
-        done < <(echo "$rules" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+/[0-9]+')
-      
-        echo "CIDR IPs:"
-        printf '%s\n' "${cidr_ips[@]}"
-      
-        for cidr_ip in "${cidr_ips[@]}"; do
+        cat added_cidr_sg1.txt | while read cidr_ip; do
           if [ ! -z "$cidr_ip" ]; then
-          aws ec2 revoke-security-group-ingress --group-id $SECURITY_GROUP_1 --protocol tcp --port 80 --cidr "$cidr_ip" || echo "Failed to revoke ingress permissions for CIDR IP: $cidr_ip"
+            aws ec2 revoke-security-group-ingress --group-id $SECURITY_GROUP_1 --protocol tcp --port 80 --cidr "$cidr_ip" || echo "Failed to revoke ingress permissions for CIDR IP: $cidr_ip"
           fi
         done
-
-    - name: Revoke Port 80 Rules from Security Group 2
+ 
+    - name: Revoke Port 443 Rules from Security Group 2
       run: |
-        rules=$(aws ec2 describe-security-groups --group-ids $SECURITY_GROUP_2 --query 'SecurityGroups[0].IpPermissions[?IpProtocol==`tcp` && FromPort==`443`].[IpRanges[].CidrIp]' --output json)
-        echo "$rules"
-    
-        cidr_ips=()
-        while IFS= read -r line; do
-        cidr_ips+=("$line")
-        done < <(echo "$rules" | grep -oE '[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+/[0-9]+')
-    
-        echo "CIDR IPs:"
-        printf '%s\n' "${cidr_ips[@]}"
-    
-        for cidr_ip in "${cidr_ips[@]}"; do
-            if [ ! -z "$cidr_ip" ]; then
+        cat added_cidr_sg2.txt | while read cidr_ip; do
+          if [ ! -z "$cidr_ip" ]; then
             aws ec2 revoke-security-group-ingress --group-id $SECURITY_GROUP_2 --protocol tcp --port 443 --cidr "$cidr_ip" || echo "Failed to revoke ingress permissions for CIDR IP: $cidr_ip"
-        fi
+          fi
         done
