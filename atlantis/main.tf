@@ -18,11 +18,12 @@ data "terraform_remote_state" "vpc" {
 module "atlantis" {
   source = "git::git@github.com:Gazaro/terraform-modules.git//modules/atlantis"
 
-  github_organization     = "gazaro"
-  github_repository_names = ["nmr-cyberanalyst-terraform"]
+  github_organization     = "EswarWiser"
+  github_repository_names = ["Atlantis-Actions-test"]
   github_repository_owners = [
     "jaimemarco",       # Jaime Marco
     "alejandro-celada", # Alejandro Celada
+    "EswarWiser"
   ]
 
   force_recreate_token = "v2"
