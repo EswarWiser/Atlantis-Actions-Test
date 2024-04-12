@@ -60,7 +60,6 @@ jobs:
         done
 
     - name: Revoke Port 80 Rules from Security Group 1
-      if: always()
       run: |
         cat added_cidr_sg1.txt | while read cidr_ip; do
           if [ ! -z "$cidr_ip" ]; then
