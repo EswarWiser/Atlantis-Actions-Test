@@ -75,7 +75,7 @@ jobs:
     - name: Check for "ran plan for dir" in PR body
       id: check_pr_body
       run: |
-        if echo "${{ steps.get_pr_body.outputs.pr_body }}" | grep -q 'ran plan for dir'; then
+        if echo "${{ steps.get_pr_body.outputs.pr_body }}" | grep -q 'Ran Plan for dir:'; then
           echo "::set-output name=atlantis_plan_output_exists::true"
         else
           echo "::set-output name=atlantis_plan_output_exists::false"
