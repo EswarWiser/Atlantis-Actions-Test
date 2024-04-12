@@ -59,12 +59,23 @@ jobs:
             echo "Waiting for Atlantis plan status check to finish..."
             sleep 10
             timeout=$((timeout-10))
-        done
+          done
 
-    - name: Check for "atlantis plan" command output in pull request body
-      id: check_atlantis_plan_output
+    - name: Wait for output to appear in PR body
+      id: wait_for_output
+      run: sleep 60  # Adjust the duration as needed
+
+    - name: Get PR body
+      id: get_pr_body
       run: |
-        if grep -q 'atlantis plan' $GITHUB_EVENT_PATH; then
+        pr_number=$(echo "${{ github.event.pull_request.url }}" | awk -F'/' '{print $NF}')
+        pr_body=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" "https://api.github.com/repos/${GITHUB_REPOSITORY}/issues/${pr_number}" | jq -r '.body')
+        echo "::set-output name=pr_body::$pr_body"
+
+    - name: Check for "ran plan for dir" in PR body
+      id: check_pr_body
+      run: |
+        if echo "${{ steps.get_pr_body.outputs.pr_body }}" | grep -q 'ran plan for dir'; then
           echo "::set-output name=atlantis_plan_output_exists::true"
         else
           echo "::set-output name=atlantis_plan_output_exists::false"
