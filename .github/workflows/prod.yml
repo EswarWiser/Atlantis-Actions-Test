@@ -37,7 +37,7 @@ jobs:
             echo "$ip/32" >> added_cidr_sg1.txt
         done
  
-    - name: Add Github Actions IP to Security group-2
+    - name: Add Github Actions IP to Security group-2 - test
       id: add_sg2
       run: |
         for ip in ${{ steps.ip.outputs.ipv4 }}; do
