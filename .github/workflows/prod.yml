@@ -69,7 +69,7 @@ jobs:
       id: get_pr_body
       run: |
         pr_number=$(echo "${{ github.event.pull_request.url }}" | awk -F'/' '{print $NF}')
-        pr_body=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" "https://api.github.com/repos/${GITHUB_REPOSITORY}/issues/${pr_number}" | jq -r '.body')
+        pr_body=$(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" "https://api.github.com/repos/${GITHUB_REPOSITORY}/issues/${pr_number}/comments/" | jq -r '.body')
         echo "::set-output name=pr_body::$pr_body"
 
     - name: Check for "ran plan for dir" in PR body
