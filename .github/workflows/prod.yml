@@ -48,7 +48,9 @@ jobs:
     - name: Wait for "atlantis plan" status check to finish
       id: wait_for_atlantis_plan
       run: |
-        until [[ $(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
+        timeout=300
+        until [[ $timeout -eq 0 || \
+          $(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
           "https://api.github.com/repos/${GITHUB_REPOSITORY}/commits/${{ github.event.pull_request.head.sha }}/status" \
           | jq -r '.statuses[] | select(.context == "atlantis plan") | .state') == "success" || \
           $(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
@@ -56,6 +58,7 @@ jobs:
           | jq -r '.statuses[] | select(.context == "atlantis plan") | .state') == "failure" ]]; do
             echo "Waiting for Atlantis plan status check to finish..."
             sleep 10
+            timeout=$((timeout-10))
         done
 
     - name: Check for "atlantis plan" command output in pull request body
