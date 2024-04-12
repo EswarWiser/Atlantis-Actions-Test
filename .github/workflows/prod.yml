@@ -48,7 +48,7 @@ jobs:
     - name: Wait for "atlantis plan" status check to finish
       id: wait_for_atlantis_plan
       run: |
-        timeout=300
+        timeout=60
         until [[ $timeout -eq 0 || \
           $(curl -s -H "Authorization: token ${{ secrets.GITHUB_TOKEN }}" \
           "https://api.github.com/repos/${GITHUB_REPOSITORY}/commits/${{ github.event.pull_request.head.sha }}/status" \
