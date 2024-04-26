@@ -13,7 +13,7 @@ jobs:
         run: echo "dummy step"      
   prod:
     runs-on: ubuntu-latest
-    needs: test-step
+    needs: dummy
     steps:
       - name: prod-step
         run: echo "Hello World!"
