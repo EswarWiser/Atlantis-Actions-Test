@@ -1,4 +1,4 @@
-name: hello-world-prod
+name: hello-world-infra
 on:
   workflow_run:
     workflows: ["hello-world-test"]
@@ -11,9 +11,9 @@ jobs:
     steps:
       - name: dummy step
         run: echo "dummy step"      
-  prod:
+  infra:
     runs-on: ubuntu-latest
     needs: dummy
     steps:
-      - name: prod-step
-        run: echo "Hello World! from prod workflow"
+      - name: infra-step
+        run: echo "Hello World! from infra workflow"
