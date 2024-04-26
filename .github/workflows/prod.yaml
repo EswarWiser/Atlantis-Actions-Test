@@ -1,0 +1,14 @@
+name: hello-world-prod
+on:
+  workflow_run:
+    workflows: ["hello-world-test"]
+    types:
+      - completed
+
+jobs:
+  prod:
+    runs-on: ubuntu-latest
+    needs: test-step
+    steps:
+      - name: prod-step
+        run: echo "Hello World!"
