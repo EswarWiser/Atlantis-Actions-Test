@@ -9,7 +9,7 @@ def delete_rt(rt_id, session):
    return response
 
 def main():
-    with open('sample_rts.csv', newline='') as csvfile:
+    with open('rts.csv', newline='') as csvfile:
         reader = csv.reader(csvfile)
         next(reader)
         for row in reader:

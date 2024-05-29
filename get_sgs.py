@@ -25,42 +25,34 @@ def find_sg_dependencies(sg_id, session):
 
         # Remove only rules referencing the current security group from other security groups
         for rule in sg['IpPermissions']:
-            if 'UserIdGroupPairs' in rule:
-                rule_to_revoke = {
-                    'IpProtocol': rule['IpProtocol'],
-                    'UserIdGroupPairs': [pair for pair in rule['UserIdGroupPairs'] if pair['GroupId'] == sg_id]
-                }
-                if 'FromPort' in rule and rule['FromPort'] is not None:
-                    rule_to_revoke['FromPort'] = rule['FromPort']
-                if 'ToPort' in rule and rule['ToPort'] is not None:
-                    rule_to_revoke['ToPort'] = rule['ToPort']
-
-                if rule_to_revoke['UserIdGroupPairs']:
+            for pair in rule.get('UserIdGroupPairs', []):
+                if pair['GroupId'] == sg_id:
                     try:
                         ec2.revoke_security_group_ingress(
                             GroupId=sg['GroupId'],
-                            IpPermissions=[rule_to_revoke]
+                            IpPermissions=[{
+                                'IpProtocol': rule['IpProtocol'],
+                                'FromPort': rule.get('FromPort'),
+                                'ToPort': rule.get('ToPort'),
+                                'UserIdGroupPairs': [pair]
+                            }]
                         )
                         dependencies.append(f"  - Removed ingress rule from {sg['GroupId']} referencing {sg_id}")
                     except Exception as e:
                         dependencies.append(f"  - Error removing ingress rule from {sg['GroupId']}: {str(e)}")
 
         for rule in sg['IpPermissionsEgress']:
-            if 'UserIdGroupPairs' in rule:
-                rule_to_revoke = {
-                    'IpProtocol': rule['IpProtocol'],
-                    'UserIdGroupPairs': [pair for pair in rule['UserIdGroupPairs'] if pair['GroupId'] == sg_id]
-                }
-                if 'FromPort' in rule and rule['FromPort'] is not None:
-                    rule_to_revoke['FromPort'] = rule['FromPort']
-                if 'ToPort' in rule and rule['ToPort'] is not None:
-                    rule_to_revoke['ToPort'] = rule['ToPort']
-
-                if rule_to_revoke['UserIdGroupPairs']:
+            for pair in rule.get('UserIdGroupPairs', []):
+                if pair['GroupId'] == sg_id:
                     try:
                         ec2.revoke_security_group_egress(
                             GroupId=sg['GroupId'],
-                            IpPermissions=[rule_to_revoke]
+                            IpPermissions=[{
+                                'IpProtocol': rule['IpProtocol'],
+                                'FromPort': rule.get('FromPort'),
+                                'ToPort': rule.get('ToPort'),
+                                'UserIdGroupPairs': [pair]
+                            }]
                         )
                         dependencies.append(f"  - Removed egress rule from {sg['GroupId']} referencing {sg_id}")
                     except Exception as e:
@@ -69,7 +61,7 @@ def find_sg_dependencies(sg_id, session):
     return dependencies
 
 def main():
-    with open('sgs.csv', newline='') as csvfile:
+    with open('sample_sgs.csv', newline='') as csvfile:
         reader = csv.reader(csvfile)
         next(reader)  # Skip header row
         for row in reader:
